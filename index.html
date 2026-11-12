@@ -102,18 +102,21 @@
 
     document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible" && waitingForYt) {
-            waitingForYt = false;
             fetch(`/api/verify_yt?id=${sessionId}`).then(res => res.json()).then(data => {
-                if (data.error === "too_fast") alert("se inscreva no canal e olhe um vídeo aleatório, desempregado>:(\n\nSubscribe to the channel and watch a random video, unemployed person >:(");
-                else if (data.success) updateUI();
+                if (data.error === "too_fast") {
+                    alert("se inscreva no canal e olhe um vídeo aleatório, desempregado>:(\n\nSubscribe to the channel and watch a random video, unemployed person >:(");
+                } else if (data.success) {
+                    waitingForYt = false;
+                    updateUI();
+                }
             });
         }
     });
 
     function startLinkvertise() {
         fetch(`/api/start_linkvertise?id=${sessionId}`).then(() => {
-            // OBS: QUANDO CRIAR O LINKVERTISE, INSIRA SEU LINK ABAIXO:
-            window.open('COLOQUE_SEU_LINKVERTISE_AQUI', '_blank');
+            // Seu Linkvertise oficial inserido aqui
+            window.open('https://link-target.net/5893999/R3PCeN97EIca', '_blank');
         });
     }
 
