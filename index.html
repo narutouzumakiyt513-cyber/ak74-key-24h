@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ak-74 Hub | Acesso 24h</title>
+    <style>
+        body { background-color: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+        .container { background: #161b22; padding: 30px; border-radius: 12px; border: 1px solid #30363d; box-shadow: 0 0 20px rgba(0, 200, 255, 0.1); max-width: 420px; width: 90%; }
+        h1 { color: #58a6ff; margin-bottom: 5px; }
+        p { color: #8b949e; font-size: 14px; margin-bottom: 20px; }
+        .btn { background: #238636; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; margin-bottom: 15px; transition: 0.3s; }
+        .btn:hover { background: #2ea043; }
+        .btn:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
+        .yt-btn { background: #da3633; }
+        .yt-btn:hover { background: #f85149; }
+        .btn-red { background: #da3633; margin-top: 10px; }
+        .btn-red:hover { background: #f85149; }
+        .input-box { width: 100%; padding: 12px; background: #0d1117; color: white; border: 1px solid #58a6ff; border-radius: 8px; margin-bottom: 10px; box-sizing: border-box; font-size: 14px; }
+        .avatar-img { border-radius: 50%; border: 3px solid #58a6ff; margin: 15px 0; width: 120px; }
+        .screen { display: none; }
+        .screen.active { display: block; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Ak-74 Hub</h1>
+    
+    <!-- TELA 1: MISSÕES -->
+    <div id="screen-missions" class="screen active">
+        <p>Complete as etapas para liberar seu acesso (24 Horas)</p>
+        <button id="btn1" class="btn yt-btn" onclick="startYouTube()">View creator's channel<br><span style="font-size:12px;">ver canal do criador</span></button>
+        <button id="btn2" class="btn" onclick="startLinkvertise()" disabled>Missão 2/2 (Bloqueada)</button>
+    </div>
+
+    <!-- TELA 2: BUSCA ROBLOX -->
+    <div id="screen-search" class="screen">
+        <p style="color: #58a6ff; font-weight: bold;">Missões Concluídas!</p>
+        <p>Vincule sua conta do Roblox para liberar o acesso ao Admin.</p>
+        <input type="text" id="inputId" class="input-box" placeholder="Opção Colocar ID (garante 100% de sucesso)">
+        <button class="btn" onclick="searchRoblox('id')">Buscar por ID</button>
+        <hr style="border-color: #30363d; margin: 20px 0;">
+        <input type="text" id="inputUser" class="input-box" placeholder="Opção colocar Username (não garante 100% de sucesso)">
+        <button class="btn" onclick="searchRoblox('username')">Buscar por Username</button>
+    </div>
+
+    <!-- TELA 3: CONFIRMAÇÃO DA FOTO -->
+    <div id="screen-confirm" class="screen">
+        <p>Essa é a sua conta?</p>
+        <h2 id="robloxName" style="margin: 0; color: white;">...</h2>
+        <img id="robloxAvatar" class="avatar-img" src="" alt="Avatar">
+        <button class="btn" onclick="grantAccess()">Sou eu! Liberar acesso!<br><span style="font-size:12px;">It's me! Grant access!</span></button>
+        <button class="btn btn-red" onclick="showScreen('screen-search')">Esse não sou eu. Mudar nickname...<br><span style="font-size:12px;">That's not me...</span></button>
+    </div>
+
+    <!-- TELA 4: SUCESSO -->
+    <div id="screen-success" class="screen">
+        <h2 style="color: #3fb950;">Acesso Liberado!</h2>
+        <p>O seu ID já está na Whitelist. O Painel Admin já pode ser aberto no script.</p>
+        <p style="font-weight: bold; margin-top: 30px;">Fechar site?<br><span style="font-size:12px;">Access Granted! Close Site?</span></p>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn" onclick="window.close()">Sim / Yes</button>
+            <button class="btn btn-red" onclick="alert('Aba mantida aberta.')">Não / No</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let sessionId = localStorage.getItem('ak74_24h_session');
+    if (!sessionId) { sessionId = Math.random().toString(36).substring(2); localStorage.setItem('ak74_24h_session', sessionId); }
+    let waitingForYt = false;
+    let currentUserRobloxId = null;
+
+    if (new URLSearchParams(window.location.search).get('verify') === '2') {
+        fetch(`/api/verify_linkvertise?id=${sessionId}`).then(res => res.json()).then(data => {
+            if (data.error) alert(data.error === "bypass_detected" ? "Bypass detectado! Faça a missão corretamente." : data.error);
+            window.location.href = "/";
+        });
+    } else { updateUI(); }
+
+    function updateUI() {
+        fetch(`/api/status?id=${sessionId}`).then(res => res.json()).then(data => {
+            if (data.step >= 1) {
+                document.getElementById('btn1').innerHTML = "Missão 1/2 (Concluída ✔)";
+                document.getElementById('btn1').disabled = true; document.getElementById('btn1').style.background = "#2ea043";
+                if (data.step < 2) { document.getElementById('btn2').disabled = false; document.getElementById('btn2').innerText = "Ir para Linkvertise (Pendente)"; }
+            }
+            if (data.step >= 2) { showScreen('screen-search'); }
+        });
+    }
+
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function startYouTube() {
+        waitingForYt = true;
+        fetch(`/api/click_yt?id=${sessionId}`).then(() => window.open('https://youtube.com/@Ak_74Oficial', '_blank'));
+    }
+
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible" && waitingForYt) {
+            waitingForYt = false;
+            fetch(`/api/verify_yt?id=${sessionId}`).then(res => res.json()).then(data => {
+                if (data.error === "too_fast") alert("se inscreva no canal e olhe um vídeo aleatório, desempregado>:(\n\nSubscribe to the channel and watch a random video, unemployed person >:(");
+                else if (data.success) updateUI();
+            });
+        }
+    });
+
+    function startLinkvertise() {
+        fetch(`/api/start_linkvertise?id=${sessionId}`).then(() => {
+            // OBS: QUANDO CRIAR O LINKVERTISE, INSIRA SEU LINK ABAIXO:
+            window.open('COLOQUE_SEU_LINKVERTISE_AQUI', '_blank');
+        });
+    }
+
+    function searchRoblox(type) {
+        const query = type === 'id' ? document.getElementById('inputId').value : document.getElementById('inputUser').value;
+        if (!query) return;
+        
+        fetch(`/api/roblox_info?query=${query}&type=${type}`).then(res => res.json()).then(data => {
+            if (data.error) return alert(data.error);
+            currentUserRobloxId = data.id;
+            document.getElementById('robloxName').innerText = data.username;
+            document.getElementById('robloxAvatar').src = data.avatar;
+            showScreen('screen-confirm');
+        });
+    }
+
+    function grantAccess() {
+        fetch(`/api/whitelist_add?id=${currentUserRobloxId}&session_id=${sessionId}`).then(res => res.json()).then(data => {
+            if (data.success) showScreen('screen-success');
+            else alert(data.error);
+        });
+    }
+</script>
+</body>
+</html>
